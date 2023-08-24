@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snake Game</title>
+  <style>
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #222;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+    canvas {
+      border: 1px solid white;
+    }
+    #gameContainer {
+      display: flex;
+      align-items: flex-start;
+    }
+    #gameCanvas {
+      margin-right: 20px;
+    }
+    #scoreContainer {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    #score {
+      font-size: 24px;
+    }
+    #restartButton {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="gameContainer">
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <div id="scoreContainer">
+      <div id="score">Score: 0</div>
+      <button id="restartButton">Restart</button>
+    </div>
+  </div>
+  
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const context = canvas.getContext('2d');
+    const restartButton = document.getElementById('restartButton');
+    const scoreDisplay = document.getElementById('score');
+
+    const gridSize = 20;
+    let snake = [{ x: 5 * gridSize, y: 5 * gridSize }];
+    let direction = 'right';
+    let food = generateFood();
+    let score = 0;
+    let gameInterval;
+
+    function generateFood() {
+      const foodX = Math.floor(Math.random() * (canvas.width / gridSize)) * gridSize;
+      const foodY = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
+      return { x: foodX, y: foodY };
+    }
+
+    function drawSnake() {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      snake.forEach(segment => {
+        context.fillStyle = 'white';
+        context.fillRect(segment.x, segment.y, gridSize, gridSize);
+      });
+      context.fillStyle = 'red';
+      context.fillRect(food.x, food.y, gridSize, gridSize);
+      scoreDisplay.textContent = `Score: ${score}`;
+    }
+
+    function moveSnake() {
+      const head = Object.assign({}, snake[0]);
+      switch (direction) {
+        case 'right':
+          head.x += gridSize;
+          break;
+        case 'left':
+          head.x -= gridSize;
+          break;
+        case 'down':
+          head.y += gridSize;
+          break;
+        case 'up':
+          head.y -= gridSize;
+          break;
+      }
+      snake.unshift(head);
+      if (head.x === food.x && head.y === food.y) {
+        food = generateFood();
+        score += 10;
+      } else {
+        snake.pop();
+      }
+    }
+
+    function checkCollision() {
+      const head = snake[0];
+      if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+        endGame();
+      }
+      for (let i = 1; i < snake.length; i++) {
+        if (head.x === snake[i].x && head.y === snake[i].y) {
+          endGame();
+        }
+      }
+    }
+
+    function endGame() {
+      clearInterval(gameInterval);
+      restartButton.style.display = 'block';
+    }
+
+    function startGame() {
+      snake = [{ x: 5 * gridSize, y: 5 * gridSize }];
+      direction = 'right';
+      food = generateFood();
+      score = 0;
+      restartButton.style.display = 'none';
+      gameInterval = setInterval(gameLoop, 100);
+    }
+
+    function gameLoop() {
+      moveSnake();
+      drawSnake();
+      checkCollision();
+    }
+
+    document.addEventListener('keydown', (event) => {
+      const key = event.key;
+      if (key === 'ArrowRight' && direction !== 'left') {
+        direction = 'right';
+      } else if (key === 'ArrowLeft' && direction !== 'right') {
+        direction = 'left';
+      } else if (key === 'ArrowDown' && direction !== 'up') {
+        direction = 'down';
+      } else if (key === 'ArrowUp' && direction !== 'down') {
+        direction = 'up';
+      }
+    });
+
+    restartButton.addEventListener('click', startGame);
+
+    startGame();
+  </script>
+</body>
+</html>
